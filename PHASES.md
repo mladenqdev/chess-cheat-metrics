@@ -307,3 +307,29 @@ engine → report UI → calibration → deploy.
 - One long drawn game showed ours 84.2 vs platform 61 accuracy — eval-source variance
   (depth 12 vs lichess's deeper server analysis) on a volatile game, not a formula bug
   (the golden test pins the formula). Expect such per-game spreads; aggregates smooth them.
+
+### addendum (same day): lessons from a real suspect account
+
+A user-supplied suspect (chess.com blitz 2480, account **1 day old**, 55 games) exposed
+three gaps, all fixed:
+
+- **Bands now reach 2400–3000** (and sampling takes `--bands`/`--time-class`; high bands
+  top up from the tail of the lichess leaderboard when arenas run dry). Rapid pilot bands
+  added where this hour's arenas allowed (1200–1600, 2400–3000); middle rapid bands fill
+  on the full run. Resume key fixed to username+timeClass.
+- **Timing z-scores are one-sided now**: varied timing must not subtract suspicion —
+  assistance can fake thinking time. Flat timing still adds.
+- **Context flags UI**: fresh account (<90d) / few games (<300) / already-high rating
+  (≥2200) render as an amber facts box under the tier — plan metric #8, surfaced
+  prominently instead of buried in the profile line.
+
+The instructive outcome: the suspect's move metrics sit dead-center in the measured
+2400–3000 cohort (T1 40.9 vs 41.8±2.9, acpl 30 vs 27±2, accuracy 91.0 vs 89.8±0.8) —
+composite −0.8, tier "consistent". **Engine-agreement metrics catch players performing
+above their rating; they cannot separate a fresh account that entered at its playing
+strength from a strong player on a smurf** — there is no mismatch to detect. For such
+accounts the discriminating evidence is the trajectory (1 day, 55 games, 2480) — which
+the report now shouts via context flags — plus, later: selectivity/clutch metrics,
+opponent-ban rates, bigger samples at higher depth. Also noted: chess.com ratings are
+being compared against lichess-derived bands (systematically strong cohort = conservative,
+fewer false flags); per-platform baselines are the eventual fix.
