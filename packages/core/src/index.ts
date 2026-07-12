@@ -15,3 +15,4 @@ export * from './metrics/cpl';
 export * from './metrics/engineMatch';
 export * from './metrics/time';
 export * from './metrics/playerReport';
+export * from './metrics/reportTier';
