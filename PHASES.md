@@ -143,3 +143,53 @@ engine → report UI → calibration → deploy.
   layer always produces its own multiPV evals; platform values stay as a cross-check.
 - Playwright headless verification lives in the session scratchpad, not the repo — consider
   a committed e2e script later if it earns its keep.
+
+## phase 4 — metrics engine (done 2026-07-12)
+
+### what was done
+
+- `packages/core/src/metrics/`: statistics utilities incl. Wilson intervals (`stats.ts`),
+  the lichess accuracy-formula port (`accuracy.ts`), per-move centipawn loss (`cpl.ts`),
+  engine-match ranking T1/T2/T3 (`engineMatch.ts`), think-time derivation + stats
+  (`time.ts`), and per-player game metrics + aggregation with the 120-move sample gate
+  (`playerReport.ts`). Built TDD — tests written first; 29 new tests (65 total).
+- Harness now shows, after analysis: an aggregate line (T1/T2/T3 rates with Wilson CI,
+  acpl, accuracy, think-time stats, sample-gate warning) and per-game player metrics.
+- Verified headless on real lichess games: per-game T1/T2/T3, acpl and accuracy rendered;
+  sample gate correctly flagged 48 < 120 eligible moves and withheld the stat summaries.
+
+### decisions
+
+- **The accuracy port is proven by a golden test**: the analysed fixture game's platform
+  evals fed through our `gameAccuracy` reproduce lichess's reported accuracies exactly
+  (75 white / 81 black). Port details that mattered: `Cp.initial = 15`, cp ceiled to ±1000
+  before the win% sigmoid, the +1 "uncertainty bonus", weights = window-stddev clamped
+  [0.5, 12], windowSize = clamp(moves/10, 2, 8), final = mean(weighted mean, harmonic mean).
+- **CPL ground-truth order**: played == top move → 0; else eval of the resulting position
+  (deeper search of the actual continuation); else the matched multiPV line's score; else
+  undefined (excluded, never guessed). Conceded mates cap at 1000cp (PGN-Spy convention).
+- **cps for game accuracy come from the NEXT position's eval** (`evals[ply+1]`), so the
+  final move of a game has no accuracy contribution — same hole semantics lichess uses
+  for mate scores. Positions after the last move are never engine-evaluated.
+- **T2/T3 are cumulative** (T2 includes T1), matching PGN-Spy's reporting.
+- **Think time = prevOwnClock − clock + increment**, clamped at 0 (lag compensation can
+  go negative). Timing metrics use only the player's *eligible* moves — premoves and
+  book moves would poison flat-timing detection.
+- **The sample gate withholds stat summaries entirely** (acpl/accuracy/timing are
+  `undefined` below 120 eligible moves) rather than showing them with a caveat — a tiny
+  sample reads as precision it doesn't have. Match rates still show (with their wide CIs).
+- **Rating-conditioned z-scores and baselines deferred to phase 6** — inventing seed
+  sigmas now would produce authoritative-looking nonsense; raw metrics + CIs are honest.
+
+### notes for future
+
+- T1 rates at depth 12 with the lite engine run high in absolute terms (a 1700 showed 56%
+  on a 48-move sample) — never interpret raw match rates without the rating-conditioned
+  baselines (phase 6), and consider measuring baselines at the exact depth/engine the site
+  ships, since match rates are engine- and depth-relative.
+- Aggregate accuracy is a plain mean of per-game accuracies; lichess defines no cross-game
+  aggregate, so ours is a choice — revisit if move-count weighting proves fairer.
+- Flat-timing detection (low CV) is summarised but not yet flagged/scored — composite
+  scoring lands with the report UI (phase 5) + baselines (phase 6).
+- chess.com games never carry platform accuracy for cross-checking our numbers in the
+  harness — the lichess golden test covers formula fidelity instead.
