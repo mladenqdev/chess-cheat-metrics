@@ -1,15 +1,10 @@
-// Samples players per rating band from recent big lichess blitz arenas.
-//   pnpm --filter @ccm/calibrate exec tsx src/sample.ts [--per-band 4] [--out data/players.json]
+// Samples players per rating band from recent big lichess arenas of one time class.
+//   pnpm --filter @ccm/calibrate exec tsx src/sample.ts [--per-band 4] \
+//     [--time-class blitz|rapid|bullet] [--bands "1200-1600,..."] [--out data/players.json]
 import { getJson, getText } from '@ccm/core';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { USER_AGENT } from './shared';
-
-const BANDS: [number, number][] = [
-  [1200, 1600],
-  [1600, 2000],
-  [2000, 2400],
-];
 
 function arg(name: string, fallback: string): string {
   const index = process.argv.indexOf(`--${name}`);
@@ -17,7 +12,14 @@ function arg(name: string, fallback: string): string {
 }
 
 const perBand = Number(arg('per-band', '4'));
+const timeClass = arg('time-class', 'blitz');
 const outPath = arg('out', 'data/players.json');
+const BANDS: [number, number][] = arg('bands', '1200-1600,1600-2000,2000-2400,2400-3000')
+  .split(',')
+  .map((range) => {
+    const [min, max] = range.split('-').map(Number);
+    return [min!, max!] as [number, number];
+  });
 const opts = { userAgent: USER_AGENT };
 
 interface ArenaList {
@@ -30,9 +32,9 @@ interface ResultLine {
 }
 
 const arenas = (await getJson<ArenaList>('https://lichess.org/api/tournament', opts)).finished
-  .filter((t) => t.perf?.key === 'blitz' && t.nbPlayers >= 100)
+  .filter((t) => t.perf?.key === timeClass && t.nbPlayers >= 60)
   .map((t) => t.id);
-console.log(`sampling from ${arenas.length} finished blitz arenas: ${arenas.join(', ')}`);
+console.log(`sampling from ${arenas.length} finished ${timeClass} arenas: ${arenas.join(', ')}`);
 
 const pools = new Map<string, ResultLine[]>(BANDS.map(([min, max]) => [`${min}-${max}`, []]));
 const seen = new Set<string>();
@@ -55,6 +57,28 @@ for (const id of arenas) {
   if (enough) break;
 }
 
+// arenas rarely have enough 2400+ finishers — top up high bands from the tail
+// of the blitz leaderboard (its lowest-rated entries sit closest to 2400)
+interface Leaderboard {
+  users: { username: string; perfs?: Record<string, { rating?: number } | undefined> }[];
+}
+for (const [min, max] of BANDS.filter(([lo]) => lo >= 2400)) {
+  const pool = pools.get(`${min}-${max}`)!;
+  if (pool.length >= perBand * 2) continue;
+  const top = await getJson<Leaderboard>(
+    `https://lichess.org/api/player/top/200/${timeClass}`,
+    opts,
+  );
+  for (const user of top.users.reverse()) {
+    const rating = (user.perfs as Record<string, { rating?: number } | undefined>)?.[timeClass]
+      ?.rating;
+    if (!rating || rating < min || rating >= max || seen.has(user.username.toLowerCase())) continue;
+    seen.add(user.username.toLowerCase());
+    pool.push({ username: user.username, rating });
+    if (pool.length >= perBand * 3) break;
+  }
+}
+
 const bands = BANDS.map(([min, max]) => {
   const pool = pools.get(`${min}-${max}`)!;
   // shuffle so we don't just take the arena's top finishers
@@ -69,6 +93,6 @@ const bands = BANDS.map(([min, max]) => {
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(
   outPath,
-  JSON.stringify({ generatedAt: new Date().toISOString(), timeClass: 'blitz', bands }, null, 2),
+  JSON.stringify({ generatedAt: new Date().toISOString(), timeClass, bands }, null, 2),
 );
 console.log(`wrote ${outPath}`);

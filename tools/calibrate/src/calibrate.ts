@@ -35,7 +35,8 @@ const done = new Set<string>();
 if (existsSync(outPath)) {
   for (const line of readFileSync(outPath, 'utf8').split('\n')) {
     if (!line.trim()) continue;
-    done.add((JSON.parse(line) as PlayerDatapoint).username.toLowerCase());
+    const row = JSON.parse(line) as PlayerDatapoint;
+    done.add(`${row.timeClass}:${row.username.toLowerCase()}`);
   }
 }
 
@@ -53,7 +54,7 @@ let processed = 0;
 try {
   for (const band of plan.bands) {
     for (const player of band.players) {
-      if (done.has(player.username.toLowerCase())) continue;
+      if (done.has(`${plan.timeClass}:${player.username.toLowerCase()}`)) continue;
       const label = `[${band.min}-${band.max}] ${player.username} (${player.rating})`;
       try {
         const games = await fetchLichessGames(
