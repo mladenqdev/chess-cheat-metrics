@@ -243,6 +243,21 @@ a {
   fill: var(--accent);
 }
 
+.context-flags {
+  border: 1px solid var(--tier-insufficient-border);
+  background: var(--tier-insufficient-bg);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+}
+
+.context-flags .flag-label {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
 .section-title {
   margin: 2rem 0 0.75rem;
 }

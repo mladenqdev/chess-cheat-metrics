@@ -156,6 +156,38 @@ function AccountContext({ data }: { data: ReportData }) {
   );
 }
 
+const FRESH_ACCOUNT_DAYS = 90;
+const FEW_GAMES = 300;
+const HIGH_RATING = 2200;
+
+/**
+ * Non-statistical context flags: facts that amplify the metrics but never
+ * convict alone (plan metric #8 — legit smurfs exist). A weeks-old account
+ * already playing at a high rating is the classic pattern worth surfacing.
+ */
+function ContextFlags({ data }: { data: ReportData }) {
+  const { profile, finishedAt } = data;
+  const flags: string[] = [];
+  if (profile.createdAt !== undefined) {
+    const ageDays = Math.max(0, Math.round((finishedAt - profile.createdAt) / 86_400_000));
+    if (ageDays < FRESH_ACCOUNT_DAYS) flags.push(`account is ${ageDays} days old`);
+  }
+  if (profile.totalGames !== undefined && profile.totalGames < FEW_GAMES) {
+    flags.push(`only ${profile.totalGames} games ever played`);
+  }
+  const peak = Math.max(0, ...Object.values(profile.ratings));
+  if (flags.length > 0 && peak >= HIGH_RATING) {
+    flags.push(`already rated ${peak}`);
+  }
+  if (flags.length === 0) return null;
+  return (
+    <p className="context-flags">
+      <span className="flag-label">context:</span> {flags.join(' · ')} — worth weighing alongside
+      the metrics; new accounts can be honest smurfs or returning players.
+    </p>
+  );
+}
+
 function GamesTable({ games }: { games: AnalyzedGame[] }) {
   return (
     <div className="table-wrap">
@@ -235,6 +267,7 @@ export function ReportView({ data }: { data: ReportData }) {
       </header>
 
       <TierBanner data={data} />
+      <ContextFlags data={data} />
 
       <section className="metric-grid">
         <RateCard
