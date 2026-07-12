@@ -57,10 +57,64 @@ for (const id of arenas) {
   if (enough) break;
 }
 
-// arenas rarely have enough 2400+ finishers — top up high bands from the tail
-// of the blitz leaderboard (its lowest-rated entries sit closest to 2400)
 interface Leaderboard {
   users: { username: string; perfs?: Record<string, { rating?: number } | undefined> }[];
+}
+
+interface BulkUser {
+  username: string;
+  perfs?: Record<string, { rating?: number; games?: number; prov?: boolean } | undefined>;
+}
+
+/**
+ * Last-resort source for bands the arenas of THIS time class didn't cover:
+ * take every username seen in any recent big arena (any time class), bulk-fetch
+ * profiles (POST /api/users, 300 per call) and keep those whose rating in OUR
+ * time class falls in the band and who actually play it (≥30 games).
+ */
+async function profileFallback(bandsNeedingPlayers: [number, number][]): Promise<void> {
+  const all = (await getJson<ArenaList>('https://lichess.org/api/tournament', opts)).finished
+    .filter((t) => t.nbPlayers >= 60)
+    .map((t) => t.id);
+  const candidates: string[] = [];
+  for (const id of all) {
+    const ndjson = await getText(
+      `https://lichess.org/api/tournament/${id}/results?nb=300`,
+      opts,
+      'application/x-ndjson',
+    );
+    for (const line of ndjson.split('\n')) {
+      if (!line.trim()) continue;
+      const row = JSON.parse(line) as ResultLine;
+      if (row.username && !seen.has(row.username.toLowerCase())) candidates.push(row.username);
+    }
+  }
+  console.log(
+    `profile fallback: checking ${candidates.length} arena players' ${timeClass} ratings`,
+  );
+  for (let i = 0; i < candidates.length && bandsNeedingPlayers.length > 0; i += 300) {
+    const response = await fetch('https://lichess.org/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain', Accept: 'application/json' },
+      body: candidates.slice(i, i + 300).join(','),
+    });
+    if (!response.ok) break;
+    const users = (await response.json()) as BulkUser[];
+    for (const user of users) {
+      const perf = user.perfs?.[timeClass];
+      if (!perf?.rating || (perf.games ?? 0) < 30 || perf.prov) continue;
+      if (seen.has(user.username.toLowerCase())) continue;
+      const band = bandsNeedingPlayers.find(
+        ([min, max]) => perf.rating! >= min && perf.rating! < max,
+      );
+      if (!band) continue;
+      seen.add(user.username.toLowerCase());
+      pools.get(`${band[0]}-${band[1]}`)!.push({ username: user.username, rating: perf.rating });
+    }
+    bandsNeedingPlayers = bandsNeedingPlayers.filter(
+      ([min, max]) => pools.get(`${min}-${max}`)!.length < perBand * 2,
+    );
+  }
 }
 for (const [min, max] of BANDS.filter(([lo]) => lo >= 2400)) {
   const pool = pools.get(`${min}-${max}`)!;
@@ -78,6 +132,9 @@ for (const [min, max] of BANDS.filter(([lo]) => lo >= 2400)) {
     if (pool.length >= perBand * 3) break;
   }
 }
+
+const thinBands = BANDS.filter(([min, max]) => pools.get(`${min}-${max}`)!.length < perBand);
+if (thinBands.length > 0) await profileFallback(thinBands);
 
 const bands = BANDS.map(([min, max]) => {
   const pool = pools.get(`${min}-${max}`)!;

@@ -323,7 +323,15 @@ three gaps, all fixed:
   (≥2200) render as an amber facts box under the tier — plan metric #8, surfaced
   prominently instead of buried in the profile line.
 
-The instructive outcome: the suspect's move metrics sit dead-center in the measured
+**Coverage completed same evening**: rapid arenas alone couldn't fill 1600–2400 (that
+hour's arenas skewed low), so `sample.ts` gained a **bulk-profile fallback** — collect
+every username from all recent big arenas regardless of time class, `POST /api/users`
+(300/call), keep those whose rating in the target class fits the band with ≥30 real
+games. All 8 bands (blitz + rapid, 1200–3000, 31 players) now measured. Validation on
+real accounts: a user-supplied rapid suspect (2130, acpl 17, accuracy 92.2, account 18
+days old) scored **composite 8.4 → extreme**, while the user's own honest account (rapid 2079) scored **−1.3 → normal** — clean separation with the same algorithm.
+
+The instructive outcome: the first suspect's move metrics sit dead-center in the measured
 2400–3000 cohort (T1 40.9 vs 41.8±2.9, acpl 30 vs 27±2, accuracy 91.0 vs 89.8±0.8) —
 composite −0.8, tier "consistent". **Engine-agreement metrics catch players performing
 above their rating; they cannot separate a fresh account that entered at its playing
