@@ -12,5 +12,8 @@
   },
   "devDependencies": {
     "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "chessops": "^0.15.0"
   }
 }

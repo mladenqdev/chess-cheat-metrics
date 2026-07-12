@@ -1,0 +1,17 @@
+{
+  "avatar": "https://images.chesscomfiles.com/uploads/v1/user/118845794.dec4f757.200x200o.e0ae16f198b1.jpeg",
+  "player_id": 118845794,
+  "@id": "https://api.chess.com/pub/player/dewa_kipas",
+  "url": "https://www.chess.com/member/Dewa_Kipas",
+  "name": "Dadang Subur",
+  "username": "dewa_kipas",
+  "followers": 6,
+  "country": "https://api.chess.com/pub/country/ID",
+  "location": "Bandung",
+  "last_online": 1614717640,
+  "joined": 1612583282,
+  "status": "closed:fair_play_violations",
+  "is_streamer": false,
+  "verified": false,
+  "streaming_platforms": []
+}

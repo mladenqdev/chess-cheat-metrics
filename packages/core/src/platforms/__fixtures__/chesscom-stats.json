@@ -1,0 +1,18 @@
+{
+  "chess_blitz": {
+    "last": { "rating": 3420, "date": 1783703858, "rd": 30 },
+    "best": { "rating": 3465, "date": 1779759219 },
+    "record": { "win": 35162, "loss": 5474, "draw": 4308 }
+  },
+  "chess_bullet": {
+    "last": { "rating": 3300 },
+    "record": { "win": 100, "loss": 50, "draw": 10 }
+  },
+  "chess_rapid": {
+    "last": { "rating": 2900 },
+    "record": { "win": 10, "loss": 2, "draw": 1 }
+  },
+  "fide": 2802,
+  "tactics": {},
+  "puzzle_rush": {}
+}

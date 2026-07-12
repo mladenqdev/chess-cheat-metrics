@@ -1,4 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // browser-first lib so `fetch`/`Response` typecheck; the code also runs on Node 18+
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
   "include": ["src"]
 }
