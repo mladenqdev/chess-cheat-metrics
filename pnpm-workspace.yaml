@@ -4,3 +4,4 @@ packages:
   - tools/*
 allowBuilds:
   esbuild: true
+  stockfish: true

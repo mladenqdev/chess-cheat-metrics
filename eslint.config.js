@@ -5,9 +5,16 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/node_modules/**'] },
+  // public/engine holds the vendored stockfish build (copied by scripts/copy-engine.mjs)
+  { ignores: ['**/dist/**', '**/node_modules/**', 'apps/web/public/engine/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    files: ['**/scripts/**/*.mjs'],
+    languageOptions: {
+      globals: { console: 'readonly', process: 'readonly', URL: 'readonly' },
+    },
+  },
   {
     files: ['apps/web/src/**/*.{ts,tsx}'],
     plugins: {

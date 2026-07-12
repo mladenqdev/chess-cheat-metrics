@@ -5,3 +5,4 @@ coverage/
 *.local
 .DS_Store
 .claude/
+apps/web/public/engine/
