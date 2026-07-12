@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "tsx src/index.ts",
-    "full": "tsx src/sample.ts --per-band 30 --out data/players-blitz-full.json && tsx src/sample.ts --time-class rapid --per-band 30 --out data/players-rapid-full.json && tsx src/calibrate.ts --games 10 --in data/players-blitz-full.json && tsx src/calibrate.ts --games 10 --in data/players-rapid-full.json && tsx src/build-baselines.ts --pilot false"
+    "full": "tsx src/sample.ts --per-band ${PER_BAND:-30} --out data/players-blitz-full.json && tsx src/sample.ts --time-class rapid --per-band ${PER_BAND:-30} --out data/players-rapid-full.json && tsx src/calibrate.ts --games ${GAMES:-10} --in data/players-blitz-full.json && tsx src/calibrate.ts --games ${GAMES:-10} --in data/players-rapid-full.json && tsx src/build-baselines.ts --pilot false"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
