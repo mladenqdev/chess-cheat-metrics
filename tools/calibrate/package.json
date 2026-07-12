@@ -12,6 +12,7 @@
     "tsx": "^4.23.0"
   },
   "dependencies": {
-    "@ccm/core": "workspace:*"
+    "@ccm/core": "workspace:*",
+    "stockfish": "^18.0.8"
   }
 }

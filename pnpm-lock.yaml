@@ -78,6 +78,9 @@ importers:
       '@ccm/core':
         specifier: workspace:*
         version: link:../../packages/core
+      stockfish:
+        specifier: ^18.0.8
+        version: 18.0.8
     devDependencies:
       '@types/node':
         specifier: ^26.1.1
