@@ -239,3 +239,71 @@ engine → report UI → calibration → deploy.
   available; add when porting the design.
 - Per-game "suspicion sort" (plan's phase-5 item) deferred to calibration: sorting by
   raw T1% without baselines would imply meaning the numbers don't have yet.
+
+## phase 6 — calibration (pilot done 2026-07-12; full run pending)
+
+### what was done
+
+- `packages/core/src/metrics/baselines.ts`: baseline table types, `findBand`,
+  `compareToCohort` (per-metric z-scores oriented so positive = engine-like, combined
+  with **Stouffer's weighted method** Σ(w·z)/√Σw², weights t1 .35 / acpl .35 /
+  accuracy .2 / timing .05+.05, tiers: unusual ≥ 2, extreme ≥ 3.5). `reportTier` now
+  returns normal/unusual/extreme when a comparison exists. 75 tests total.
+- `tools/calibrate`: `nodeEngine.ts` (runs the exact production WASM engine in Node via
+  the shared UCI session), `sample.ts` (players per rating band from big finished lichess
+  blitz arenas), `calibrate.ts` (resumable per-player pipeline → JSONL),
+  `build-baselines.ts` (band means/stds → `baselines.generated.json` in core),
+  `validate.ts` (labeled banned/clean accounts → composite z + pairwise AUC).
+- **Pilot run**: 3 blitz bands (1200–1600, 1600–2000, 2000–2400) × 4 players × 6 games,
+  4 minutes total (~16s/player). Even at n≈4 the physics show: accuracy 78.0 → 80.5 →
+  85.6 and acpl 54 → 56 → 42 across bands. Table committed with `pilot: true`.
+- UI: tier banner renders the three cohort states with the composite score and an
+  explicit provisional label; metric cards show "cohort: mean±std" footnotes.
+- Verified headless via deep link: thibault (blitz 1712, 20 games, 291 decisions) →
+  **"Consistent with the rating cohort", composite 1.0** — the right answer for a
+  legitimate ~1700.
+
+### decisions
+
+- **Stouffer, not a weighted mean**: TDD caught that averaging z-scores lets three
+  independent 2–4σ anomalies dilute each other; Σ(w·z)/√Σw² accumulates evidence
+  properly (engine-like test profile: 2.9 → 5.4).
+- **Calibration runs the identical engine/depth as production** (stockfish 18 lite
+  single WASM, depth 12, multiPv 3) — match rates are engine- and depth-relative, so
+  published or otherwise-measured baselines would be systematically wrong.
+- **Baselines are distributions of player-level aggregates per band**, and the product
+  z-scores a player against that population; calibration datapoints bypass the 120-move
+  product gate (`rawDatapoint`) because population statistics live at the band level.
+- **Pilot table ships but is always marked provisional** (`meta.pilot` or
+  `nPlayers < MIN_BAND_PLAYERS=20`) — the UI says so under the tier.
+- **Cloud-eval is off during calibration** — mass runs shouldn't lean on lichess's cache,
+  and the local engine is fast enough (~150ms/position).
+- Sampling comes from finished high-population blitz arenas (wide rating spread, active
+  accounts, includes ratings without extra API calls).
+
+### stockfish-npm-in-node gotchas (hard-won, do not rediscover)
+
+- `locateFile` receives the GENERIC name `stockfish.wasm` — always return the
+  lite-single wasm path, or it loads the 107MB multithreaded binary and dies on a
+  memory-import LinkError.
+- The glue **nulls global `fetch` in Node** (to force its fs loading path) — snapshot
+  and restore `globalThis.fetch` around init or every later API call breaks.
+- The output hook is **`listener`**, not `print` — the glue overrides `print` with a
+  function that prefers `listener` and falls back to console.log.
+- A failed UCI init used to cache its rejected promise and poison every later evaluate —
+  `ensureInit` now clears itself on rejection (fixed in core).
+
+### notes for future
+
+- **Full calibration is one overnight command sequence**: `sample.ts --per-band 30` →
+  `calibrate.ts --games 10` (resumable; ~16s/player-game-6 → budget accordingly) →
+  `build-baselines.ts --pilot false`. Extend BANDS with sub-1200, 2400+, and
+  bullet/rapid time classes when doing it.
+- `validate.ts` is ready but needs a labels file of banned/clean accounts
+  (fair-play-closed chess.com accounts keep public archives); run it after full
+  calibration to tune tier thresholds against ROC/AUC instead of the current 2/3.5.
+- v1 compares a mixed-time-class aggregate against the dominant class's band —
+  refine to per-class aggregates if reports often mix classes.
+- One long drawn game showed ours 84.2 vs platform 61 accuracy — eval-source variance
+  (depth 12 vs lichess's deeper server analysis) on a volatile game, not a formula bug
+  (the golden test pins the formula). Expect such per-game spreads; aggregates smooth them.
