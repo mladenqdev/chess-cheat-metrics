@@ -194,6 +194,27 @@ engine → report UI → calibration → deploy.
 - chess.com games never carry platform accuracy for cross-checking our numbers in the
   harness — the lichess golden test covers formula fidelity instead.
 
+## v1.1 — anti-smurf metrics (2026-07-13)
+
+Prompted by a real case: a fresh account (2 days, 55 games, blitz 2480) whose move quality
+sits dead-center in its cohort — undetectable by rating-relative metrics because its rating
+IS its (possibly assisted) performance. Two rating-independent signals added, both
+**one-sided** (only ever add suspicion):
+
+- **Consistency across games** (`accuracyStd`): std of per-game accuracy. Humans swing
+  (form, tilt, time trouble); assistance is metronomic. Needs ≥5 games with accuracy.
+- **Time follows difficulty** (`timeComplexityCorr`): Spearman corr between think time and
+  the PV1−PV2 gap on eligible moves, pooled across games. Humans think longer on hard
+  choices (negative corr); assistance plays at its own pace (corr ≈ 0). Needs ≥30 pairs.
+  This is the "uniform 5–6s per move" catcher.
+
+Composite reweighted: t1 .30, acpl .30, accuracy .15, consistency .10, time-blindness .10,
+instant .025, flatness .025. New baseline fields are OPTIONAL on BandBaseline — the current
+table lacks them, so the new z's stay undefined until the next calibration run measures
+them (`run full` now writes `data/metrics-v2.jsonl`; old v1 datapoints lack per-player
+spread/corr and can't be reused for these fields). Test learning: synthetic PVs must be
+ordered best-for-the-mover (ascending white-cp for black) — the engine convention.
+
 ## phase 5 — report ui (done 2026-07-12)
 
 ### what was done
