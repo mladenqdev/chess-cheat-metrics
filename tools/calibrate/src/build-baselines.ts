@@ -35,6 +35,12 @@ const metric = (values: (number | null)[]) => {
   return { mean: mean(present), std: stddev(present) };
 };
 
+/** for v2 metrics that old datapoints lack — omit the baseline rather than emit zeros */
+const maybeMetric = (values: (number | null | undefined)[]) => {
+  const present = values.filter((v): v is number => typeof v === 'number');
+  return present.length >= 2 ? { mean: mean(present), std: stddev(present) } : undefined;
+};
+
 const bands = [...byBand.entries()].map(([, players]) => {
   const first = players[0]!;
   return {
@@ -49,6 +55,8 @@ const bands = [...byBand.entries()].map(([, players]) => {
     accuracy: metric(players.map((p) => p.accuracyMean)),
     instantRate: metric(players.map((p) => p.instantRate)),
     thinkCv: metric(players.map((p) => p.thinkCv)),
+    accuracyStd: maybeMetric(players.map((p) => p.accuracyStdDev)),
+    timeComplexityCorr: maybeMetric(players.map((p) => p.timeComplexityCorr)),
   };
 });
 

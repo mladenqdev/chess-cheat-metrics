@@ -4,6 +4,7 @@ import {
   computePlayerGameMetrics,
   evaluateGamePositions,
   mean,
+  spearmanCorrelation,
   stddev,
   thinkStats,
   type KvCache,
@@ -46,6 +47,10 @@ export interface PlayerDatapoint {
   accuracyMean: number | null;
   instantRate: number | null;
   thinkCv: number | null;
+  /** spread of per-game accuracy within this player (v2 runs) */
+  accuracyStdDev?: number | null;
+  /** Spearman corr(think time, PV gap) pooled over eligible moves (v2 runs) */
+  timeComplexityCorr?: number | null;
 }
 
 /**
@@ -62,6 +67,14 @@ export function rawDatapoint(
   const accuracies = perGame.flatMap((g) => (g.accuracy !== undefined ? [g.accuracy] : []));
   const times = perGame.flatMap((g) => g.thinkMsEligible);
   const timing = thinkStats(times);
+  const pairs = perGame.flatMap((g) => g.timeDifficulty);
+  const corr =
+    pairs.length >= 30
+      ? spearmanCorrelation(
+          pairs.map((p) => p.thinkMs),
+          pairs.map((p) => p.gapCp),
+        )
+      : undefined;
   return {
     ...base,
     games: perGame.length,
@@ -74,6 +87,8 @@ export function rawDatapoint(
     accuracyMean: accuracies.length > 0 ? mean(accuracies) : null,
     instantRate: timing?.instantRate ?? null,
     thinkCv: timing?.coefficientOfVariation ?? null,
+    accuracyStdDev: accuracies.length >= 5 ? stddev(accuracies) : null,
+    timeComplexityCorr: corr ?? null,
   };
 }
 
