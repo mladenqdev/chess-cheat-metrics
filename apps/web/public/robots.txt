@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://chesscheatdetection.com/sitemap.xml
+Sitemap: https://chess-cheat-detection.com/sitemap.xml

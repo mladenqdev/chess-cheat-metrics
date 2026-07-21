@@ -14,7 +14,7 @@ import {
   type PlayerGameMetrics,
 } from '@ccm/core';
 
-export const USER_AGENT = 'chesscheatdetection.com calibration (mladenqdev@gmail.com)';
+export const USER_AGENT = 'chess-cheat-detection.com calibration (mladenqdev@gmail.com)';
 
 /** identical to what the website runs — calibration must match production */
 export const ANALYSIS = { depth: 12, multiPv: 3 } as const;
