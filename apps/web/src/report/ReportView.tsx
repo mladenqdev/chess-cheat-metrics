@@ -345,14 +345,6 @@ export function ReportView({ data }: { data: ReportData }) {
             cohort={band?.accuracyStd && usually(band.accuracyStd, 1)}
           />
         )}
-        {aggregate.timeComplexityCorr && (
-          <ValueCard
-            label="Time follows difficulty"
-            value={aggregate.timeComplexityCorr.value.toFixed(2)}
-            hint="Do they think longer on harder moves, like people do? A number near zero means their pace ignores how hard the position is."
-            cohort={band?.timeComplexityCorr && usually(band.timeComplexityCorr, 2)}
-          />
-        )}
       </section>
       <p className="muted small">
         Brackets show the likely true range given how many moves we could score. "Average player"

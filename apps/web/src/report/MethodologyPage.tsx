@@ -63,11 +63,11 @@ export function MethodologyPage() {
       </p>
 
       <p>
-        <strong>Consistency and clock behavior.</strong> Two human signatures round out the picture:
-        how much game accuracy swings from game to game (humans have bad days; assistance is
-        steady), and whether thinking time tracks how hard each decision was (humans think longer on
-        hard moves; assistance plays at its own pace regardless). Both signals only ever add
-        suspicion. Looking human on them doesn't subtract any, because assistance can fake variety.
+        <strong>Consistency.</strong> How much game accuracy swings from game to game. Humans have
+        bad days, tilt and time trouble; assistance is steady. This signal only ever adds suspicion.
+        Looking human on it doesn't subtract any, because assistance can fake variety. We also
+        measured whether thinking time tracks decision difficulty, and found that honest players
+        average about zero on our current measure of difficulty, so that number is not scored.
       </p>
 
       <h2>The unusualness score</h2>

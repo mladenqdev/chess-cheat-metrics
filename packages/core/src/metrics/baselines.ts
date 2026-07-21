@@ -77,8 +77,6 @@ export interface CohortComparison {
   zThinkCv?: number;
   /** too-steady game-to-game accuracy (one-sided) */
   zConsistency?: number;
-  /** think time ignoring decision difficulty (one-sided) */
-  zTimeBlind?: number;
   composite: number;
   tier: CohortTier;
 }
@@ -123,18 +121,16 @@ export function compareToCohort(
   );
   // steadier-than-human game-to-game accuracy (lower spread = more suspicious)
   const zConsistency = clampSuspicion(z(aggregate.accuracyStd?.value, band.accuracyStd, true));
-  // think time decoupled from decision difficulty: humans correlate negatively
-  // (hard choice → more time), so a HIGHER correlation than the cohort is suspicious
-  const zTimeBlind = clampSuspicion(
-    z(aggregate.timeComplexityCorr?.value, band.timeComplexityCorr),
-  );
+  // NOTE: time-vs-difficulty correlation is measured (aggregate.timeComplexityCorr)
+  // but deliberately NOT scored: calibration showed honest players average ≈ 0.00
+  // on it too (the PV1−PV2 gap is a weak difficulty proxy), so it cannot
+  // discriminate. Revisit with a better difficulty measure.
 
   const weighted: [number | undefined, number][] = [
     [zT1, 0.3],
     [zAcpl, 0.3],
     [zAccuracy, 0.15],
     [zConsistency, 0.1],
-    [zTimeBlind, 0.1],
     [zInstant, 0.025],
     [zThinkCv, 0.025],
   ];
@@ -157,7 +153,6 @@ export function compareToCohort(
     zInstant,
     zThinkCv,
     zConsistency,
-    zTimeBlind,
     composite,
     tier: composite >= EXTREME_Z ? 'extreme' : composite >= UNUSUAL_Z ? 'unusual' : 'normal',
   };

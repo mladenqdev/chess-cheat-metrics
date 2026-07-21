@@ -141,38 +141,43 @@ describe('compareToCohort', () => {
     expect(varied!.composite).toBeCloseTo(neutral!.composite, 5);
   });
 
-  it('treats robotic consistency and difficulty-blind timing as one-sided amplifiers', () => {
+  it('treats robotic consistency as a one-sided amplifier', () => {
     const base = { t1: { successes: 0, n: 200, rate: 0.47, ci: [0.4, 0.54] as [number, number] } };
-    const withoutTimingAnomalies = compareToCohort(
+    const withoutConsistencyAnomaly = compareToCohort(
       aggregate(base),
       { timeClass: 'blitz', rating: 1700 },
       table,
     );
-    const withTimingAnomalies = compareToCohort(
+    const withConsistencyAnomaly = compareToCohort(
       aggregate({
         ...base,
         accuracyStd: { value: 1, n: 10 }, // metronomic game-to-game accuracy
-        timeComplexityCorr: { value: 0.02, n: 200 }, // time ignores difficulty
       }),
       { timeClass: 'blitz', rating: 1700 },
       table,
     );
-    expect(withTimingAnomalies!.zConsistency).toBeCloseTo((8 - 1) / 3);
-    expect(withTimingAnomalies!.zTimeBlind).toBeCloseTo((0.02 - -0.25) / 0.12);
-    expect(withTimingAnomalies!.composite).toBeGreaterThan(withoutTimingAnomalies!.composite + 0.5);
+    expect(withConsistencyAnomaly!.zConsistency).toBeCloseTo((8 - 1) / 3);
+    expect(withConsistencyAnomaly!.composite).toBeGreaterThan(
+      withoutConsistencyAnomaly!.composite + 0.4,
+    );
 
-    // human-like values (big swings, strongly negative corr) must not exonerate
+    // human-like swings must not exonerate
     const humanlike = compareToCohort(
-      aggregate({
-        ...base,
-        accuracyStd: { value: 15, n: 10 },
-        timeComplexityCorr: { value: -0.5, n: 200 },
-      }),
+      aggregate({ ...base, accuracyStd: { value: 15, n: 10 } }),
       { timeClass: 'blitz', rating: 1700 },
       table,
     );
     expect(humanlike!.zConsistency).toBe(0);
-    expect(humanlike!.zTimeBlind).toBe(0);
+  });
+
+  it('does not score time-vs-difficulty correlation (measured non-discriminating)', () => {
+    const flatTimer = compareToCohort(
+      aggregate({ timeComplexityCorr: { value: 0.4, n: 200 } }),
+      { timeClass: 'blitz', rating: 1700 },
+      table,
+    );
+    const neutral = compareToCohort(aggregate({}), { timeClass: 'blitz', rating: 1700 }, table);
+    expect(flatTimer!.composite).toBeCloseTo(neutral!.composite, 5);
   });
 
   it('skips metrics whose baseline spread is degenerate', () => {

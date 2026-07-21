@@ -215,6 +215,19 @@ them (`run full` now writes `data/metrics-v2.jsonl`; old v1 datapoints lack per-
 spread/corr and can't be reused for these fields). Test learning: synthetic PVs must be
 ordered best-for-the-mover (ascending white-cp for black) — the engine convention.
 
+## copy + honesty pass (2026-07-21)
+
+- Plain-language rewrite of all report copy (user feedback: "average joe" must understand
+  it): no em dashes anywhere user-facing, no ± in values, cohort footnotes are now
+  "average player: <mean>", one legend line explains brackets, footer slimmed.
+- **Time-vs-difficulty removed from the report and the composite.** A user spotted the
+  contradiction: the card said "near zero means their pace ignores difficulty" while the
+  measured average player is also ≈ 0.00, which would make everyone look suspicious. The
+  v2 calibration falsified the hypothesis (PV1−PV2 gap is a weak difficulty proxy for
+  humans), so the signal cannot discriminate; keeping a dead z in Stouffer's denominator
+  also slightly dampened real signals. Still measured in calibration data for a future,
+  better difficulty proxy (eval sharpness/volatility); methodology states this openly.
+
 ## v2 calibration + corrections (2026-07-13)
 
 - **Full v2 run**: 755 players kept across 11 bands (n=43–100 in all main bands; 400–800
