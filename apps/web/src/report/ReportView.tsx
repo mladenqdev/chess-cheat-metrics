@@ -5,11 +5,7 @@ const FRESH_ACCOUNT_DAYS = 90;
 const FEW_GAMES = 300;
 const HIGH_RATING = 2200;
 
-/** the measured cohort mean, shown as "average player: <stat>" under each card */
-function usuallyPct(baseline: MetricBaseline): string {
-  return `${(baseline.mean * 100).toFixed(0)}%`;
-}
-
+/** the measured cohort mean, shown as "average player: <stat>" under value cards */
 function usually(baseline: MetricBaseline, digits = 0): string {
   return baseline.mean.toFixed(digits);
 }
@@ -115,8 +111,14 @@ function TierBanner({ data }: { data: ReportData }) {
   );
 }
 
-function CiBar({ rate }: { rate: RateWithCi }) {
-  const [lo, hi] = rate.ci;
+/**
+ * With a measured band: the shaded strip is the NORMAL RANGE for players at
+ * this rating, and the marker is this player. Without one, it falls back to
+ * showing the uncertainty range of the player's own number.
+ */
+function CiBar({ rate, normalRange }: { rate: RateWithCi; normalRange?: MetricBaseline }) {
+  const lo = normalRange ? Math.max(0, normalRange.mean - normalRange.std) : rate.ci[0];
+  const hi = normalRange ? Math.min(1, normalRange.mean + normalRange.std) : rate.ci[1];
   return (
     <svg viewBox="0 0 100 8" className="ci-bar" aria-hidden="true">
       <rect x="0" y="3" width="100" height="2" className="ci-track" />
@@ -130,26 +132,23 @@ function RateCard({
   label,
   rate,
   hint,
-  cohort,
+  normalRange,
 }: {
   label: string;
   rate: RateWithCi;
   hint: string;
-  cohort?: string;
+  normalRange?: MetricBaseline;
 }) {
+  const rangeLine = normalRange
+    ? `normal range: ${Math.max(0, (normalRange.mean - normalRange.std) * 100).toFixed(0)}-${((normalRange.mean + normalRange.std) * 100).toFixed(0)}%`
+    : `likely range: ${(rate.ci[0] * 100).toFixed(0)}-${(rate.ci[1] * 100).toFixed(0)}%`;
   return (
     <div className="card metric">
       <h3>{label}</h3>
-      <p className="value">
-        {(rate.rate * 100).toFixed(1)}%
-        <span className="ci muted">
-          {' '}
-          [{(rate.ci[0] * 100).toFixed(0)}-{(rate.ci[1] * 100).toFixed(0)}]
-        </span>
-      </p>
-      <CiBar rate={rate} />
+      <p className="value">{(rate.rate * 100).toFixed(1)}%</p>
+      <p className="muted small ci">{rangeLine}</p>
+      <CiBar rate={rate} normalRange={normalRange} />
       <p className="muted small">{hint}</p>
-      {cohort && <p className="muted small cohort-line">average player: {cohort}</p>}
     </div>
   );
 }
@@ -313,19 +312,19 @@ export function ReportView({ data }: { data: ReportData }) {
           label="Top engine move"
           rate={aggregate.t1}
           hint="How often they played the computer's number one choice in positions with a real decision to make."
-          cohort={band && usuallyPct(band.t1Rate)}
+          normalRange={band?.t1Rate}
         />
         <RateCard
           label="Top-2 moves"
           rate={aggregate.t2}
           hint="How often their move was one of the computer's two best."
-          cohort={band && usuallyPct(band.t2Rate)}
+          normalRange={band?.t2Rate}
         />
         <RateCard
           label="Top-3 moves"
           rate={aggregate.t3}
           hint="How often their move was one of the computer's three best."
-          cohort={band && usuallyPct(band.t3Rate)}
+          normalRange={band?.t3Rate}
         />
         {aggregate.acpl && (
           <ValueCard
@@ -367,8 +366,9 @@ export function ReportView({ data }: { data: ReportData }) {
         )}
       </section>
       <p className="muted small">
-        Brackets show the likely true range given how many moves we could score. "Average player"
-        shows what a typical measured player at this rating scores.
+        On the match cards, the bracket and shaded strip show the normal range for measured players
+        at this rating, and the marker is this player. "Average player" shows the typical value at
+        this rating.
       </p>
 
       <section>
