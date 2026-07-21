@@ -12,7 +12,7 @@ export interface HttpOpts {
   sleepFn?: (ms: number) => Promise<void>;
 }
 
-const DEFAULT_USER_AGENT = 'chess-cheat-metrics (github.com/mladenqdev/chess-cheat-metrics)';
+const DEFAULT_USER_AGENT = 'chesscheatdetection.com (mladenqdev@gmail.com)';
 const MAX_RETRIES = 2;
 
 export class PlatformApiError extends Error {
