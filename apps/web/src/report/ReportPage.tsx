@@ -1,7 +1,7 @@
 import type { Platform } from '@ccm/core';
 import { useEffect, useState, type FormEvent } from 'react';
 import { ReportView } from './ReportView';
-import { parseReportHash, useReport, type ReportState } from './useReport';
+import { parseReportPath, useReport, type ReportState } from './useReport';
 
 const GAME_COUNTS = [10, 20, 30, 50];
 
@@ -25,18 +25,18 @@ function ProgressView({ state }: { state: ReportState & { phase: 'analyzing' } }
 }
 
 export function ReportPage() {
-  // deep link: #/u/<platform>/<username> seeds the form and auto-runs a report
+  // deep link: /u/<platform>/<username> seeds the form and auto-runs a report
   const [platform, setPlatform] = useState<Platform>(
-    () => parseReportHash(window.location.hash)?.platform ?? 'lichess',
+    () => parseReportPath(window.location.pathname)?.platform ?? 'lichess',
   );
   const [username, setUsername] = useState(
-    () => parseReportHash(window.location.hash)?.username ?? '',
+    () => parseReportPath(window.location.pathname)?.username ?? '',
   );
   const [maxGames, setMaxGames] = useState(20);
   const { state, run } = useReport();
 
   useEffect(() => {
-    const target = parseReportHash(window.location.hash);
+    const target = parseReportPath(window.location.pathname);
     if (target) void run(target.platform, target.username, 20);
   }, [run]);
 
@@ -44,7 +44,7 @@ export function ReportPage() {
     event.preventDefault();
     const name = username.trim();
     if (!name || state.phase === 'fetching' || state.phase === 'analyzing') return;
-    window.location.hash = `#/u/${platform}/${name}`;
+    window.history.pushState({}, '', `/u/${platform}/${name}`);
     void run(platform, name, maxGames);
   }
 
@@ -119,7 +119,7 @@ export function ReportPage() {
             </li>
           </ol>
           <p className="muted small">
-            <a href="#/methodology">Read the full methodology</a>, including what this site can and
+            <a href="/methodology">Read the full methodology</a>, including what this site can and
             cannot know.
           </p>
         </section>

@@ -82,12 +82,7 @@ try {
           continue;
         }
         const t0 = Date.now();
-        const { perGame } = await analyzePlayerGames(
-          games,
-          player.username,
-          engine.session,
-          cache,
-        );
+        const { perGame } = await analyzePlayerGames(games, player.username, engine.session, cache);
         playersOnEngine++;
         const row = rawDatapoint(perGame, {
           username: player.username,
@@ -99,7 +94,9 @@ try {
         if (row.eligible === 0) {
           // real games were analyzed yet nothing evaluated — the engine is dead;
           // exit so full.sh restarts the process with a fresh engine and resumes
-          console.error(`${label}: ${games.length} games, ${totalPlies} plies, 0 eligible — engine unhealthy, exiting for auto-restart`);
+          console.error(
+            `${label}: ${games.length} games, ${totalPlies} plies, 0 eligible — engine unhealthy, exiting for auto-restart`,
+          );
           process.exit(1);
         }
         appendFileSync(outPath, JSON.stringify(row) + '\n');

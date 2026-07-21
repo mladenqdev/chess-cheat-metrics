@@ -114,7 +114,7 @@ export function MethodologyPage() {
       </p>
 
       <p>
-        <a href="#/">← back to the analyzer</a>
+        <a href="/">← back to the analyzer</a>
       </p>
     </article>
   );

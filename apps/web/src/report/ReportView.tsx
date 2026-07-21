@@ -381,7 +381,7 @@ export function ReportView({ data }: { data: ReportData }) {
           This report is statistical evidence, not an accusation. High engine agreement has innocent
           explanations (forcing styles, prepared lines, strong play), and low numbers don't prove
           innocence either. Only the platforms, with data no outsider has, can make fair-play
-          decisions. <a href="#/methodology">Methodology</a>.
+          decisions. <a href="/methodology">Methodology</a>.
         </p>
       </footer>
     </article>

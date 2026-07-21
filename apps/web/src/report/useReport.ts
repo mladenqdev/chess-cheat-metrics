@@ -27,11 +27,11 @@ import { idbCache } from '../lib/idbCache';
 
 const cloudEval = new CloudEvalClient();
 
-/** parses "#/u/lichess/thibault" style report permalinks */
-export function parseReportHash(
-  hash: string,
+/** parses "/u/lichess/thibault" style report permalinks */
+export function parseReportPath(
+  pathname: string,
 ): { platform: Platform; username: string } | undefined {
-  const match = /^#\/u\/(lichess|chesscom)\/([A-Za-z0-9_-]{1,40})$/.exec(hash);
+  const match = /^\/u\/(lichess|chesscom)\/([A-Za-z0-9_-]{1,40})$/.exec(pathname);
   if (!match) return undefined;
   return { platform: match[1] as Platform, username: match[2]! };
 }

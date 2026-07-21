@@ -1,4 +1,4 @@
-# chess cheat metrics
+# chesscheatdetection
 
 Statistical anomaly reports for chess.com and lichess accounts. Enter a username, the site
 downloads the player's recent games via the platforms' public APIs, analyses every move with
