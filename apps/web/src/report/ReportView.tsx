@@ -120,7 +120,7 @@ function CiBar({ rate, normalRange }: { rate: RateWithCi; normalRange?: MetricBa
   const lo = normalRange ? Math.max(0, normalRange.mean - normalRange.std) : rate.ci[0];
   const hi = normalRange ? Math.min(1, normalRange.mean + normalRange.std) : rate.ci[1];
   return (
-    <svg viewBox="0 0 100 8" className="ci-bar" aria-hidden="true">
+    <svg viewBox="0 0 100 8" preserveAspectRatio="none" className="ci-bar" aria-hidden="true">
       <rect x="0" y="3" width="100" height="2" className="ci-track" />
       <rect x={lo * 100} y="1.5" width={(hi - lo) * 100} height="5" className="ci-band" rx="1" />
       <rect x={rate.rate * 100 - 0.75} y="0" width="1.5" height="8" className="ci-marker" />
@@ -358,7 +358,7 @@ export function ReportView({ data }: { data: ReportData }) {
         )}
         {aggregate.accuracyStd && (
           <ValueCard
-            label="Consistency across games"
+            label="Consistency"
             value={`${aggregate.accuracyStd.value.toFixed(1)} points`}
             hint="Everyone has good and bad games; a very small swing means suspiciously steady play."
             cohort={band?.accuracyStd && `${usually(band.accuracyStd, 1)} points`}
