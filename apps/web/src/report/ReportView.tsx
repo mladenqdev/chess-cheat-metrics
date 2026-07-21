@@ -317,16 +317,16 @@ export function ReportView({ data }: { data: ReportData }) {
         {aggregate.acpl && (
           <ValueCard
             label="Mistake size"
-            value={aggregate.acpl.mean.toFixed(0)}
-            hint="How much advantage they give away per move, in hundredths of a pawn. Lower means stronger play."
-            cohort={band && usually(band.acpl)}
+            value={`${(aggregate.acpl.mean / 100).toFixed(2)} pawns`}
+            hint="How much advantage the average move gives away. Engine play loses almost nothing."
+            cohort={band && `${(band.acpl.mean / 100).toFixed(2)} pawns`}
           />
         )}
         {aggregate.accuracyMean && (
           <ValueCard
             label="Accuracy"
             value={aggregate.accuracyMean.mean.toFixed(1)}
-            hint="The same accuracy score lichess shows after a game. 100 means computer-perfect play; stronger players score higher."
+            hint="The accuracy score lichess shows after a game; 100 is computer-perfect."
             cohort={band && usually(band.accuracy, 1)}
           />
         )}
