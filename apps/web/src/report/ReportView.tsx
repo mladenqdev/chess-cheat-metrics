@@ -1,5 +1,22 @@
-import { mean, type RateWithCi } from '@ccm/core';
+import { mean, type MetricBaseline, type RateWithCi } from '@ccm/core';
 import type { AnalyzedGame, ReportData } from './useReport';
+
+const FRESH_ACCOUNT_DAYS = 90;
+const FEW_GAMES = 300;
+const HIGH_RATING = 2200;
+
+/** "usually 38 to 48%" style range: mean plus/minus one spread, for average-joe reading */
+function usuallyPct(baseline: MetricBaseline): string {
+  const lo = Math.max(0, (baseline.mean - baseline.std) * 100);
+  const hi = (baseline.mean + baseline.std) * 100;
+  return `usually ${lo.toFixed(0)} to ${hi.toFixed(0)}%`;
+}
+
+function usually(baseline: MetricBaseline, digits = 0): string {
+  const lo = baseline.mean - baseline.std;
+  const hi = baseline.mean + baseline.std;
+  return `usually ${lo.toFixed(digits)} to ${hi.toFixed(digits)}`;
+}
 
 function TierBanner({ data }: { data: ReportData }) {
   const { tier, profile, aggregate } = data;
@@ -11,7 +28,7 @@ function TierBanner({ data }: { data: ReportData }) {
           {profile.platform === 'chesscom'
             ? `chess.com closed this account${profile.banReason === 'fair_play' ? ' for cheating (their words: fair-play violations)' : ''}.`
             : 'lichess marked this account for breaking its rules.'}{' '}
-          That's the platform's own public flag — everything below is our independent measurement.
+          That is the platform's own public flag. Everything below is our independent measurement.
         </p>
       </section>
     );
@@ -21,9 +38,9 @@ function TierBanner({ data }: { data: ReportData }) {
       <section className="tier tier-insufficient" role="status">
         <h2>Not enough games to say anything</h2>
         <p>
-          We could only score {aggregate.eligible} real decisions — we need at least 120 before the
-          numbers mean anything. Lucky streaks look spectacular in small samples. Try analyzing more
-          games.
+          We could only score {aggregate.eligible} real decisions, and we need at least 120 before
+          the numbers mean anything. Lucky streaks look spectacular in small samples. Try analyzing
+          more games.
         </p>
       </section>
     );
@@ -32,7 +49,8 @@ function TierBanner({ data }: { data: ReportData }) {
   const comparison = data.comparison;
   if (comparison && (tier === 'normal' || tier === 'unusual' || tier === 'extreme')) {
     const { band, composite, provisional } = comparison;
-    const group = `real ${band.timeClass} players rated ${band.minRating}–${band.maxRating} that we measured with the same engine`;
+    const range = `${band.minRating}-${band.maxRating}`;
+    const group = `real ${band.timeClass} players rated ${band.minRating} to ${band.maxRating} that we measured with the same engine`;
     const score = composite.toFixed(1);
     // a very new, barely-played account already at a high rating: its rating IS
     // its own (possibly assisted) play, so "normal for the rating" proves little
@@ -44,22 +62,22 @@ function TierBanner({ data }: { data: ReportData }) {
     const content = {
       normal: {
         className: 'tier-neutral',
-        title: `Looks like a normal ${band.minRating}–${band.maxRating} ${band.timeClass} player`,
+        title: `Looks like a normal ${range} ${band.timeClass} player`,
         body:
-          `We compared this account to ${group}. Its engine agreement, mistake rate and move timing all sit inside the ordinary range — unusualness score ${score}, where 0 is dead average and anything under 2 is unremarkable.` +
+          `We compared this account to ${group}. Engine agreement, mistake rate and move timing all sit inside the ordinary range. The unusualness score is ${score}: zero means dead average, and anything under 2 is unremarkable.` +
           (freshHighProfile
-            ? ' Important: this account is brand new and already plays at a high level — for such accounts, move quality cannot distinguish a strong player on a fresh account from assistance playing in proportion to its rating. This result is NOT an all-clear; weigh the context below heavily.'
+            ? ' Important: this account is brand new and already plays at a high level. For accounts like that, move quality cannot separate a strong player on a fresh account from assistance playing at the level of its rating. This result is not an all-clear, so weigh the context below heavily.'
             : ''),
       },
       unusual: {
         className: 'tier-insufficient',
-        title: `Plays better than most ${band.minRating}–${band.maxRating} ${band.timeClass} players`,
-        body: `Compared to ${group}, some of this account's numbers sit above the ordinary range — unusualness score ${score} (under 2 is normal, 2+ is uncommon, 3.5+ almost never happens naturally). Worth attention, not an accusation: good form, opening prep, or a strong player on a new account can look like this. More games sharpen the picture.`,
+        title: `Plays better than most ${range} ${band.timeClass} players`,
+        body: `Compared to ${group}, some of this account's numbers sit above the ordinary range. The unusualness score is ${score}: under 2 is normal, above 2 is uncommon, and above 3.5 almost never happens naturally. Treat it as worth attention, not as an accusation. Good form, opening prep, or a strong player on a new account can look like this. More games sharpen the picture.`,
       },
       extreme: {
         className: 'tier-flagged',
-        title: `Very far from normal ${band.minRating}–${band.maxRating} ${band.timeClass} play`,
-        body: `Compared to ${group}, several of this account's numbers are far outside what honest players produce — unusualness score ${score}, and honest play almost never scores above 3.5. This is strong statistical evidence, not proof; if it matches your suspicion, report the account through the platform's own channels.`,
+        title: `Very far from normal ${range} ${band.timeClass} play`,
+        body: `Compared to ${group}, several of this account's numbers are far outside what honest players produce. The unusualness score is ${score}, and honest play almost never scores above 3.5. This is strong statistical evidence, not proof. If it matches your suspicion, report the account through the platform's own channels.`,
       },
     }[tier];
     return (
@@ -69,7 +87,7 @@ function TierBanner({ data }: { data: ReportData }) {
         {provisional && (
           <p className="small muted">
             Heads up: our comparison group for this rating is still small ({band.nPlayers} players),
-            so treat the score as an early read — it firms up as we measure more players.
+            so treat the score as an early read. It firms up as we measure more players.
           </p>
         )}
       </section>
@@ -81,8 +99,8 @@ function TierBanner({ data }: { data: ReportData }) {
       <h2>We measured the play, but can't grade it yet</h2>
       <p>
         {aggregate.eligible} decisions across {aggregate.games} games are scored below. We haven't
-        measured enough real players at this rating and time control to know what's normal there —
-        so rather than guess, we show the raw numbers with their uncertainty ranges.
+        measured enough real players at this rating and time control to know what's normal there, so
+        rather than guess we show the raw numbers with their uncertainty ranges.
       </p>
     </section>
   );
@@ -117,12 +135,12 @@ function RateCard({
         {(rate.rate * 100).toFixed(1)}%
         <span className="ci muted">
           {' '}
-          [{(rate.ci[0] * 100).toFixed(0)}–{(rate.ci[1] * 100).toFixed(0)}]
+          [{(rate.ci[0] * 100).toFixed(0)}-{(rate.ci[1] * 100).toFixed(0)}]
         </span>
       </p>
       <CiBar rate={rate} />
       <p className="muted small">{hint}</p>
-      {cohort && <p className="muted small cohort-line">typical here: {cohort}</p>}
+      {cohort && <p className="muted small cohort-line">honest players here: {cohort}</p>}
     </div>
   );
 }
@@ -143,7 +161,7 @@ function ValueCard({
       <h3>{label}</h3>
       <p className="value">{value}</p>
       <p className="muted small">{hint}</p>
-      {cohort && <p className="muted small cohort-line">typical here: {cohort}</p>}
+      {cohort && <p className="muted small cohort-line">honest players here: {cohort}</p>}
     </div>
   );
 }
@@ -169,14 +187,10 @@ function AccountContext({ data }: { data: ReportData }) {
   );
 }
 
-const FRESH_ACCOUNT_DAYS = 90;
-const FEW_GAMES = 300;
-const HIGH_RATING = 2200;
-
 /**
  * Non-statistical context flags: facts that amplify the metrics but never
- * convict alone (plan metric #8 — legit smurfs exist). A weeks-old account
- * already playing at a high rating is the classic pattern worth surfacing.
+ * convict alone. A weeks-old account already playing at a high rating is the
+ * classic pattern worth surfacing.
  */
 function ContextFlags({ data }: { data: ReportData }) {
   const { profile, finishedAt } = data;
@@ -198,8 +212,8 @@ function ContextFlags({ data }: { data: ReportData }) {
   if (flags.length === 0) return null;
   return (
     <p className="context-flags">
-      <span className="flag-label">context:</span> {flags.join(' · ')} — worth weighing alongside
-      the metrics; new accounts can be honest smurfs or returning players.
+      <span className="flag-label">context:</span> {flags.join(' · ')}. Worth weighing alongside the
+      numbers; new accounts can be honest smurfs or returning players.
     </p>
   );
 }
@@ -237,25 +251,25 @@ function GamesTable({ games }: { games: AnalyzedGame[] }) {
                   {opponent.username} ({opponent.rating ?? '?'})
                 </td>
                 <td align="center">
-                  {game.result === '1/2-1/2' ? '½' : won ? 'W' : game.result === '*' ? '—' : 'L'}
+                  {game.result === '1/2-1/2' ? '½' : won ? 'W' : game.result === '*' ? '-' : 'L'}
                 </td>
-                <td align="center">{metrics?.eligible ?? '—'}</td>
+                <td align="center">{metrics?.eligible ?? '-'}</td>
                 <td align="center">
                   {metrics && metrics.eligible > 0
                     ? `${((metrics.t1 / metrics.eligible) * 100).toFixed(0)}%`
-                    : '—'}
+                    : '-'}
                 </td>
                 <td align="center">
-                  {metrics && metrics.cpls.length > 0 ? mean(metrics.cpls).toFixed(0) : '—'}
+                  {metrics && metrics.cpls.length > 0 ? mean(metrics.cpls).toFixed(0) : '-'}
                 </td>
                 <td align="center">
-                  {metrics?.accuracy !== undefined ? metrics.accuracy.toFixed(1) : '—'}
+                  {metrics?.accuracy !== undefined ? metrics.accuracy.toFixed(1) : '-'}
                   {metrics?.platformAccuracy !== undefined && (
                     <span className="muted small"> ({metrics.platformAccuracy})</span>
                   )}
                 </td>
                 <td align="center" className="muted">
-                  {avgDepth ? avgDepth.toFixed(0) : '—'}
+                  {avgDepth ? avgDepth.toFixed(0) : '-'}
                 </td>
               </tr>
             );
@@ -289,75 +303,65 @@ export function ReportView({ data }: { data: ReportData }) {
         <RateCard
           label="Top engine move"
           rate={aggregate.t1}
-          hint="How often the played move was Stockfish's #1 choice, in positions with a real decision to make."
-          cohort={
-            band && `${(band.t1Rate.mean * 100).toFixed(1)}±${(band.t1Rate.std * 100).toFixed(1)}%`
-          }
+          hint="How often they played the computer's number one choice in positions with a real decision to make."
+          cohort={band && usuallyPct(band.t1Rate)}
         />
         <RateCard
           label="Top-2 moves"
           rate={aggregate.t2}
-          hint="Played one of the engine's two best moves."
-          cohort={
-            band && `${(band.t2Rate.mean * 100).toFixed(1)}±${(band.t2Rate.std * 100).toFixed(1)}%`
-          }
+          hint="How often their move was one of the computer's two best."
+          cohort={band && usuallyPct(band.t2Rate)}
         />
         <RateCard
           label="Top-3 moves"
           rate={aggregate.t3}
-          hint="Played one of the engine's three best moves."
-          cohort={
-            band && `${(band.t3Rate.mean * 100).toFixed(1)}±${(band.t3Rate.std * 100).toFixed(1)}%`
-          }
+          hint="How often their move was one of the computer's three best."
+          cohort={band && usuallyPct(band.t3Rate)}
         />
         {aggregate.acpl && (
           <ValueCard
-            label="Centipawn loss"
-            value={`${aggregate.acpl.mean.toFixed(0)} ± ${aggregate.acpl.std.toFixed(0)}`}
-            hint={`Average quality drop per decision (n=${aggregate.acpl.n}). Lower = stronger play.`}
-            cohort={band && `${band.acpl.mean.toFixed(0)}±${band.acpl.std.toFixed(0)}`}
+            label="Mistake size"
+            value={aggregate.acpl.mean.toFixed(0)}
+            hint="How much advantage they give away per move, in hundredths of a pawn. Lower means stronger play."
+            cohort={band && usually(band.acpl)}
           />
         )}
         {aggregate.accuracyMean && (
           <ValueCard
             label="Accuracy"
             value={aggregate.accuracyMean.mean.toFixed(1)}
-            hint="Game accuracy (lichess formula), averaged over analyzed games."
-            cohort={band && `${band.accuracy.mean.toFixed(1)}±${band.accuracy.std.toFixed(1)}`}
+            hint="The same accuracy score lichess shows after a game. 100 means computer-perfect play; stronger players score higher."
+            cohort={band && usually(band.accuracy, 1)}
           />
         )}
         {aggregate.timing && (
           <ValueCard
             label="Move timing"
             value={`${(aggregate.timing.medianMs / 1000).toFixed(1)}s median`}
-            hint={`Timing spread ${aggregate.timing.coefficientOfVariation.toFixed(2)} (low = suspiciously flat) · ${(
-              aggregate.timing.instantRate * 100
-            ).toFixed(0)}% instant replies in real decisions.`}
+            hint={`Typical time spent per move. ${(aggregate.timing.instantRate * 100).toFixed(0)}% of their real decisions got an instant reply. People vary their pace a lot; a very even pace is a warning sign.`}
           />
         )}
         {aggregate.accuracyStd && (
           <ValueCard
             label="Consistency across games"
-            value={`± ${aggregate.accuracyStd.value.toFixed(1)}`}
-            hint="How much game accuracy swings between games. Humans swing — form, tilt, time trouble; assistance is steady. An unusually LOW number is the red flag."
-            cohort={
-              band?.accuracyStd &&
-              `± ${band.accuracyStd.mean.toFixed(1)}±${band.accuracyStd.std.toFixed(1)}`
-            }
+            value={aggregate.accuracyStd.value.toFixed(1)}
+            hint="How much their accuracy swings from game to game. Everyone has good and bad games; a very small swing means suspiciously steady play."
+            cohort={band?.accuracyStd && usually(band.accuracyStd, 1)}
           />
         )}
         {aggregate.timeComplexityCorr && (
           <ValueCard
             label="Time follows difficulty"
             value={aggregate.timeComplexityCorr.value.toFixed(2)}
-            hint="Whether thinking time tracks how hard each decision was. Humans think longer on hard moves (clearly negative number); assistance plays at its own pace regardless (near zero)."
-            cohort={
-              band?.timeComplexityCorr &&
-              `${band.timeComplexityCorr.mean.toFixed(2)}±${band.timeComplexityCorr.std.toFixed(2)}`
-            }
+            hint="Do they think longer on harder moves, like people do? A number near zero means their pace ignores how hard the position is."
+            cohort={band?.timeComplexityCorr && usually(band.timeComplexityCorr, 2)}
           />
         )}
       </section>
+      <p className="muted small">
+        Brackets show the likely true range given how many moves we could score. "Honest players
+        here" shows what real, measured players at this rating produce.
+      </p>
 
       <section>
         <h3 className="section-title">Analyzed games</h3>
@@ -367,7 +371,7 @@ export function ReportView({ data }: { data: ReportData }) {
       <footer className="disclaimer">
         <p>
           This report is statistical evidence, not an accusation. High engine agreement has innocent
-          explanations (forcing styles, prepared lines, strong play); low numbers don't prove
+          explanations (forcing styles, prepared lines, strong play), and low numbers don't prove
           innocence either. Only the platforms, with data no outsider has, can make fair-play
           decisions. <a href="#/methodology">Methodology</a>.
         </p>

@@ -2,17 +2,15 @@ export function MethodologyPage() {
   return (
     <article className="methodology">
       <h1>Methodology</h1>
-      <p className="muted">
-        What this site measures, how, and — just as important — what it cannot know.
-      </p>
+      <p className="muted">What this site measures, how it measures it, and what it cannot know.</p>
 
       <h2>Where the data comes from</h2>
       <p>
         Games and profiles come from the public APIs of lichess and chess.com: the moves, the clock
         time remaining after every move, ratings, account age, and the platforms' own public account
         flags (chess.com's <code>closed:fair_play_violations</code>, lichess's terms-of-service
-        mark). Nothing is scraped, and nothing about your search is uploaded anywhere — the analysis
-        below runs entirely in your browser.
+        mark). Nothing is scraped, and nothing about your search is uploaded anywhere. The analysis
+        runs entirely in your browser.
       </p>
 
       <h2>Engine analysis</h2>
@@ -42,8 +40,9 @@ export function MethodologyPage() {
       <h2>The metrics</h2>
       <p>
         <strong>Engine agreement (top-1/2/3).</strong> How often the played move matches Stockfish's
-        best, top-two, or top-three moves across counted decisions. Reported with 95% confidence
-        intervals — a 60% match over 20 moves means almost nothing; over 300 moves it means a lot.
+        best, top-two, or top-three moves across counted decisions. Reported with a likely range,
+        because sample size matters: a 60% match over 20 moves means almost nothing, while the same
+        match over 300 moves means a lot.
       </p>
       <p>
         <strong>Centipawn loss.</strong> How much each decision lost versus the engine's best move,
@@ -68,19 +67,18 @@ export function MethodologyPage() {
         how much game accuracy swings from game to game (humans have bad days; assistance is
         steady), and whether thinking time tracks how hard each decision was (humans think longer on
         hard moves; assistance plays at its own pace regardless). Both signals only ever add
-        suspicion — looking human on them doesn't subtract it, because assistance can fake variety.
+        suspicion. Looking human on them doesn't subtract any, because assistance can fake variety.
       </p>
 
       <h2>The unusualness score</h2>
       <p>
         Every metric above is compared to real players of the same rating and time control that we
-        measured with the same engine: "how far above their average is this account, in standard
-        deviations?" Those distances are then merged into one number — move quality weighs most,
-        timing least — using Stouffer's method, whose key property is that several independently
-        elevated signals add up instead of averaging out. Read it as: 0 = dead average, under 2 =
-        ordinary, 2+ = uncommon, 3.5+ = essentially never happens among honest players. Timing only
-        ever adds suspicion; varied timing doesn't subtract it, because assistance can fake thinking
-        time.
+        measured with the same engine. For each one we ask how far above the group's average this
+        account sits, using the group's own spread as the yardstick. Those distances are then merged
+        into one number, with move quality counting most and timing least (Stouffer's method, whose
+        key property is that several independently elevated signals add up instead of averaging
+        out). Read it like this: 0 is dead average, under 2 is ordinary, above 2 is uncommon, and
+        above 3.5 essentially never happens among honest players.
       </p>
 
       <h2>The 120-decision rule</h2>
@@ -101,7 +99,7 @@ export function MethodologyPage() {
           on a new account, or plain good form.
         </li>
         <li>
-          Coverage limits: comparison groups are measured for blitz and rapid, roughly 400–3000.
+          Coverage limits: comparison groups are measured for blitz and rapid, roughly 400 to 3000.
           Bullet, classical, and ratings outside that range show raw numbers without a grade. The
           groups are measured on lichess; chess.com ratings run lower at the same strength, which
           makes the comparison conservative (harder to flag, not easier).
@@ -111,7 +109,7 @@ export function MethodologyPage() {
       <h2>Our position</h2>
       <p>
         This report is evidence for a conversation, not a conviction. Use it to decide whether
-        something is worth reporting through the platforms' official channels — they are the only
+        something is worth reporting through the platforms' official channels. They are the only
         parties with the data and the standing to act.
       </p>
 

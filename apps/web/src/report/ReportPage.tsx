@@ -13,7 +13,7 @@ function ProgressView({ state }: { state: ReportState & { phase: 'analyzing' } }
       <h2>Analyzing with Stockfish in your browser…</h2>
       <progress value={overall} max={1} style={{ width: '100%' }} />
       <p className="muted">
-        game {gameIndex + 1} of {gamesTotal} — {currentGame.white.username} vs{' '}
+        game {gameIndex + 1} of {gamesTotal}: {currentGame.white.username} vs{' '}
         {currentGame.black.username} · position {positionsDone}/{positionsTotal}
       </p>
       <p className="muted small">
@@ -55,8 +55,8 @@ export function ReportPage() {
       <section className="hero">
         <h1>Is that account playing like a human?</h1>
         <p className="muted">
-          Statistical evidence from a player's own games — engine agreement, mistake profile, move
-          timing — measured against what their rating predicts. Evidence, never a verdict.
+          We compare a player's games to honest players at the same rating: how often they match the
+          engine, how big their mistakes are, and how they spend their clock.
         </p>
         <form onSubmit={onSubmit} className="search" aria-label="analyze a player">
           <select
@@ -111,15 +111,15 @@ export function ReportPage() {
             <li>We download the player's recent games from the platform's public API.</li>
             <li>
               Your browser replays every move through Stockfish and keeps only the positions that
-              prove something — no book moves, no forced moves, no already-decided positions.
+              prove something: no book moves, no forced moves, no already decided positions.
             </li>
             <li>
-              The player's numbers are reported with confidence intervals, and below 120 analyzed
-              decisions the report refuses to conclude anything.
+              Every number comes with its likely range and a comparison to real players at the same
+              rating, and below 120 analyzed decisions the report refuses to conclude anything.
             </li>
           </ol>
           <p className="muted small">
-            <a href="#/methodology">Read the full methodology</a> — including what this site can and
+            <a href="#/methodology">Read the full methodology</a>, including what this site can and
             cannot know.
           </p>
         </section>

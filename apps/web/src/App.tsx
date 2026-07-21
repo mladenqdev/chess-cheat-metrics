@@ -24,10 +24,7 @@ export default function App() {
       </nav>
       <main>{hash === '#/methodology' ? <MethodologyPage /> : <ReportPage />}</main>
       <footer className="site-footer muted small">
-        <p>
-          Evidence, never verdicts. Not affiliated with lichess or chess.com. Engine analysis runs
-          in your browser.
-        </p>
+        <p>Not affiliated with lichess or chess.com. Engine analysis runs in your browser.</p>
       </footer>
     </div>
   );
