@@ -85,6 +85,14 @@ function cohortComparisonFor(
   return compareToCohort(aggregate, { timeClass: dominant, rating }, defaultBaselines);
 }
 
+/**
+ * The only time controls we analyze: they are what we calibrated, and the
+ * methodology holds there. Bullet is too fast and noisy (premoves, flagging,
+ * time scrambles), correspondence allows books/engines legally, and classical
+ * has no baseline. See ANALYZED_TIME_CLASSES usage in the fetch calls.
+ */
+const ANALYZED_TIME_CLASSES: TimeClass[] = ['blitz', 'rapid'];
+
 export type ReportState =
   | { phase: 'idle' }
   | { phase: 'fetching'; username: string }
@@ -98,6 +106,7 @@ export type ReportState =
       currentGame: NormalizedGame;
     }
   | { phase: 'done'; data: ReportData }
+  | { phase: 'no-games'; profile: NormalizedProfile }
   | { phase: 'error'; message: string };
 
 export function useReport() {
@@ -114,12 +123,25 @@ export function useReport() {
         platform === 'lichess'
           ? await Promise.all([
               fetchLichessProfile(username, opts),
-              fetchLichessGames(username, { max: maxGames }, opts),
+              fetchLichessGames(
+                username,
+                { max: maxGames, timeClasses: ANALYZED_TIME_CLASSES },
+                opts,
+              ),
             ])
           : await Promise.all([
               fetchChesscomProfile(username, opts),
-              fetchChesscomGames(username, { max: maxGames }, opts),
+              fetchChesscomGames(
+                username,
+                { max: maxGames, timeClasses: ANALYZED_TIME_CLASSES },
+                opts,
+              ),
             ]);
+
+      if (games.length === 0) {
+        setState({ phase: 'no-games', profile });
+        return;
+      }
 
       const analyzed: AnalyzedGame[] = [];
       const perPlayer: PlayerGameMetrics[] = [];

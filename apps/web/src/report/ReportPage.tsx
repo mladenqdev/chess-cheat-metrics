@@ -97,6 +97,17 @@ export function ReportPage() {
         </section>
       )}
       {state.phase === 'analyzing' && <ProgressView state={state} />}
+      {state.phase === 'no-games' && (
+        <section className="panel" aria-live="polite">
+          <h2>No blitz or rapid games to analyze</h2>
+          <p>
+            {state.profile.username} has no recent blitz or rapid games, and those are the only
+            ones we analyze. Bullet is too fast and noisy for reliable signals (premoves,
+            flagging, time scrambles), and correspondence lets players use opening books and
+            engines legally, so cheat signals don't apply there.
+          </p>
+        </section>
+      )}
       {state.phase === 'error' && (
         <section className="panel error" role="alert">
           <p>{state.message}</p>
