@@ -12,7 +12,6 @@ export interface HttpOpts {
   sleepFn?: (ms: number) => Promise<void>;
 }
 
-const DEFAULT_USER_AGENT = 'chess-cheat-detection.com (mladenqdev@gmail.com)';
 const MAX_RETRIES = 2;
 
 export class PlatformApiError extends Error {
@@ -53,9 +52,12 @@ const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(reso
 export async function getText(url: string, opts: HttpOpts = {}, accept?: string): Promise<string> {
   const fetchFn = opts.fetchFn ?? fetch;
   const sleep = opts.sleepFn ?? realSleep;
-  const headers: Record<string, string> = {
-    'User-Agent': opts.userAgent ?? DEFAULT_USER_AGENT,
-  };
+  const headers: Record<string, string> = {};
+  // only send a custom User-Agent from Node (tools/calibrate). In the browser,
+  // setting it turns the request non-simple and triggers a CORS preflight that
+  // chess.com's API rejects — which breaks Firefox/Safari. Browsers send their
+  // own User-Agent automatically.
+  if (opts.userAgent) headers['User-Agent'] = opts.userAgent;
   if (accept) headers['Accept'] = accept;
 
   for (let attempt = 0; ; attempt++) {
