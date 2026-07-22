@@ -13,16 +13,16 @@ function usually(baseline: MetricBaseline, digits = 0): string {
 }
 
 /**
- * Turns the pace-evenness comparison into words: how flat this player's move
- * times are versus measured players at the same rating. Same one-sided logic
- * the unusualness score uses.
+ * Short verdict for the move-timing card: how flat this player's move times
+ * are versus measured players at the same rating. Same one-sided logic the
+ * unusualness score uses. Empty string when there's no cohort to compare to.
  */
 function paceVerdict(playerCv: number, baseline: MetricBaseline | undefined): string {
   if (!baseline || baseline.std < 0.01) return '';
   const flatness = (baseline.mean - playerCv) / baseline.std;
-  if (flatness >= 2) return "This player's pace is suspiciously even.";
-  if (flatness >= 1) return "This player's pace is steadier than most.";
-  return "This player's pace varies like a human's.";
+  if (flatness >= 2) return 'Suspiciously even';
+  if (flatness >= 1) return 'Steadier than most';
+  return 'Human-like pace';
 }
 
 function TierBanner({ data }: { data: ReportData }) {
@@ -374,15 +374,11 @@ export function ReportView({ data }: { data: ReportData }) {
           {aggregate.timing && (
             <ValueCard
               label="Move timing"
-              value={`${(aggregate.timing.medianMs / 1000).toFixed(1)}s median`}
-              hint={`People speed up and slow down; assistance keeps an even pace. ${paceVerdict(
-                aggregate.timing.coefficientOfVariation,
-                band?.thinkCv,
-              )}${
-                aggregate.timing.instantRate >= 0.05
-                  ? ` ${(aggregate.timing.instantRate * 100).toFixed(0)}% of their hard moves got an instant reply.`
-                  : ''
-              }`}
+              value={
+                paceVerdict(aggregate.timing.coefficientOfVariation, band?.thinkCv) ||
+                `${(aggregate.timing.medianMs / 1000).toFixed(1)}s median`
+              }
+              hint="Humans think longer on hard moves and rush the easy ones; assistance keeps an even pace no matter the position."
             />
           )}
           {aggregate.accuracyStd && (
