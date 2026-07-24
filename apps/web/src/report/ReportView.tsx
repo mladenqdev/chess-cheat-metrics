@@ -94,12 +94,12 @@ function TierBanner({ data }: { data: ReportData }) {
           composite >= 3
             ? `Well above the normal range for ${range} ${band.timeClass} play`
             : `Above the normal range for ${range} ${band.timeClass} players`,
-        body: `Compared to ${group}, several of this account's numbers sit above the ordinary range for its rating. The unusualness score is ${score}: under 2 is normal, above 2 is uncommon, and above 3.5 almost never happens naturally. This is a statistical signal worth attention, not proof, but the closer to 3.5, the harder it is to explain by honest play. Good form, opening prep, or a strong player on a new account can also look like this. More games sharpen the picture.`,
+        body: `Compared to ${group}, several of this account's numbers sit clearly above the ordinary range for its rating. The unusualness score is ${score}: under 2 is normal, above 2 is uncommon, and above 3.5 almost never happens naturally. This is a statistical signal worth attention, not proof, and the closer to 3.5, the harder it is to explain by honest play. Good form, opening prep, or a strong player on a new account can also look like this, so weigh the context. More games sharpen the picture.`,
       },
       extreme: {
         className: 'tier-flagged',
-        title: `Very far from normal ${range} ${band.timeClass} play`,
-        body: `Compared to ${group}, several of this account's numbers are far outside what honest players produce. The unusualness score is ${score}, and honest play almost never scores above 3.5. This is strong statistical evidence, not proof. If it matches your suspicion, report the account through the platform's own channels.`,
+        title: `Extremely far from normal ${range} ${band.timeClass} play`,
+        body: `Compared to ${group}, this account's numbers are far outside what honest players produce. The unusualness score is ${score}: across the real players we measured, almost none reach 3.5, so a result this high is very hard to explain by honest play. This is strong statistical evidence, not a verdict, and only the platform can act on it. If it matches your suspicion, report the account through the platform's own channels.`,
       },
     }[tier];
     return (

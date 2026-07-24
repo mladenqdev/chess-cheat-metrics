@@ -16,8 +16,9 @@ export function MethodologyPage() {
       <h2>Engine analysis</h2>
       <p>
         Every position is evaluated by Stockfish (WebAssembly build) running on your machine, asking
-        for the three best moves. Common opening positions reuse deeper, cached community
-        evaluations from the lichess cloud-eval database.
+        for its three best moves at a fixed search depth. The comparison groups are measured with the
+        exact same engine at the same depth, which matters because engine agreement depends on both,
+        so the same account always scores the same way regardless of where it runs.
       </p>
 
       <h2>Which moves count</h2>
@@ -72,13 +73,20 @@ export function MethodologyPage() {
 
       <h2>The unusualness score</h2>
       <p>
-        Every metric above is compared to real players of the same rating and time control that we
-        measured with the same engine. For each one we ask how far above the group's average this
-        account sits, using the group's own spread as the yardstick. Those distances are then merged
-        into one number, with move quality counting most and timing least (Stouffer's method, whose
-        key property is that several independently elevated signals add up instead of averaging
-        out). Read it like this: 0 is dead average, under 2 is ordinary, above 2 is uncommon, and
-        above 3.5 essentially never happens among honest players.
+        Every metric above is compared to real players on the same platform, at the same time
+        control, and close to the same rating, all measured with the same engine. chess.com and
+        lichess are measured as separate groups because their ratings are not the same scale, and a
+        player is compared to a window around their exact rating rather than one wide fixed band.
+        Accounts the platform has since closed for fair-play violations are dropped from these
+        groups, so the "normal" bar is set by honest play, not by cheaters who slipped in.
+      </p>
+      <p>
+        For each metric we ask how far above the group's average this account sits, using the group's
+        own spread as the yardstick. Those distances are then merged into one number, with move
+        quality counting most and timing least (Stouffer's method, whose key property is that several
+        independently elevated signals add up instead of averaging out). Read it like this: 0 is dead
+        average, under 2 is ordinary, above 2 is uncommon, and above 3.5 essentially never happens
+        among honest players.
       </p>
 
       <h2>The 120-decision rule</h2>
@@ -99,10 +107,9 @@ export function MethodologyPage() {
           on a new account, or plain good form.
         </li>
         <li>
-          Coverage limits: comparison groups are measured for blitz and rapid, roughly 400 to 3000.
-          Bullet, classical, and ratings outside that range show raw numbers without a grade. The
-          groups are measured on lichess; chess.com ratings run lower at the same strength, which
-          makes the comparison conservative (harder to flag, not easier).
+          Coverage limits: comparison groups are measured separately for lichess and chess.com, for
+          blitz and rapid, roughly 400 to 3000. Bullet, classical, and ratings outside that range
+          show raw numbers without a grade.
         </li>
       </ul>
 

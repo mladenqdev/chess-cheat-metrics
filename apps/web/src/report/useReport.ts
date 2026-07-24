@@ -79,7 +79,11 @@ function cohortComparisonFor(
       ? inGameRatings.reduce((a, b) => a + b, 0) / inGameRatings.length
       : undefined);
   if (rating === undefined) return undefined;
-  return compareToCohort(aggregate, { timeClass: dominant, rating }, defaultBaselines);
+  return compareToCohort(
+    aggregate,
+    { platform: profile.platform, timeClass: dominant, rating },
+    defaultBaselines,
+  );
 }
 
 /**

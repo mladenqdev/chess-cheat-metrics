@@ -66,7 +66,7 @@ try {
       // bypass the product sample gate: validation wants a score regardless
       const comparison = compareToCohort(
         { ...aggregate, sampleOk: true },
-        { timeClass, rating },
+        { platform: account.platform, timeClass, rating },
         defaultBaselines,
       );
       const eligible = aggregate.eligible;

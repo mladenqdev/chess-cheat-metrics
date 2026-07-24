@@ -2,7 +2,7 @@
 // one player-level datapoint per line (resumable, already-done players skip).
 //   pnpm --filter @ccm/calibrate exec tsx src/calibrate.ts [--games 6] \
 //     [--in data/players.json] [--out data/metrics.jsonl]
-import { fetchLichessGames, type TimeClass } from '@ccm/core';
+import { fetchChesscomGames, fetchLichessGames, type Platform, type TimeClass } from '@ccm/core';
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { createNodeEngine } from './nodeEngine';
@@ -25,6 +25,7 @@ const outPath = arg('out', 'data/metrics.jsonl');
 // persisted raw engine evals, shared across runs/time-classes so the expensive
 // Stockfish pass happens once; later metric changes recompute from here in minutes
 const evalsPath = arg('evals', 'data/evals.jsonl');
+const platform = arg('platform', 'lichess') as Platform;
 
 interface PlayersFile {
   timeClass: TimeClass;
@@ -74,11 +75,18 @@ try {
       }
       const label = `[${band.min}-${band.max}] ${player.username} (${player.rating})`;
       try {
-        const games = await fetchLichessGames(
-          player.username,
-          { max: gamesPerPlayer, timeClasses: [plan.timeClass], rated: true },
-          { userAgent: USER_AGENT },
-        );
+        const games =
+          platform === 'chesscom'
+            ? await fetchChesscomGames(
+                player.username,
+                { max: gamesPerPlayer, timeClasses: [plan.timeClass], rated: true },
+                { userAgent: USER_AGENT },
+              )
+            : await fetchLichessGames(
+                player.username,
+                { max: gamesPerPlayer, timeClasses: [plan.timeClass], rated: true },
+                { userAgent: USER_AGENT },
+              );
         const totalPlies = games.reduce((n, g) => n + g.moves.length, 0);
         if (games.length === 0 || totalPlies < 50) {
           // closed account, or no rated games of this time class, nothing to measure
